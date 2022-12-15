@@ -1,0 +1,144 @@
+esphome:
+  name: kitchenextractor
+
+esp8266:
+  board: esp12e
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  password: "1q2w3e4r5t6y7u8i9o0p"
+
+ota:
+  password: "1q2w3e4r5t6y7u8i9o0p"
+
+wifi:
+  ssid: "AP02"
+  password: "1q2w3e4r5t6y7u8i9o0p"
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Extractor Fallback Hotspot"
+    password: "Hotspot!"
+
+captive_portal:
+
+# Use the blue LED in the device as a status LED, which will blink if there are warnings (slow) or errors (fast)
+status_led:
+  pin:
+    number: GPIO5
+    inverted: True
+
+# i2c Bus Pins
+i2c:
+  sda: 2
+  scl: 4
+  scan: true
+  id: bus_a
+
+# Light Sensor
+sensor:
+  - platform: bh1750
+    name: "Illuminance"
+    address: 0x23
+    update_interval: 10s
+  - platform: adc
+    pin: A0
+    name: "Switch Control"
+    update_interval: 1s
+    on_value_range:
+# Light Only - 0.965
+      - above: 0.9
+        below: 0.98
+        then:
+          - switch.turn_on:  relay1
+          - switch.turn_off: relay2
+          - switch.turn_off: relay3
+          - switch.turn_off: relay4
+# Fan Slow - 0.84v
+      - above: 0.8
+        below: 0.9
+        then:
+          - switch.turn_off: relay1
+          - switch.turn_on:  relay2
+          - switch.turn_off: relay3
+          - switch.turn_off: relay4
+# Fan Slow + light - 0.75586v
+      - above: 0.7
+        below: 0.8
+        then:
+          - switch.turn_on:  relay1
+          - switch.turn_on:  relay2
+          - switch.turn_off: relay3
+          - switch.turn_off: relay4
+# Fan Mid - 0.66v
+      - above: 0.65555
+        below: 0.7
+        then:
+          - switch.turn_off: relay1
+          - switch.turn_off: relay2
+          - switch.turn_on:  relay3
+          - switch.turn_off: relay4
+# Fan Mid + Light 0.65v
+      - above: 0.55
+        below: 0.65555
+        then:
+          - switch.turn_on:  relay1
+          - switch.turn_off: relay2
+          - switch.turn_on:  relay3
+          - switch.turn_off: relay4
+# Fan High - 0.51v
+      - above: 0.495
+        below: 0.55
+        then:
+          - switch.turn_off: relay1
+          - switch.turn_off: relay2
+          - switch.turn_off: relay3
+          - switch.turn_on:  relay4
+# Fan High + Light - 0.48v
+      - above: 0.47
+        below: 0.495
+        then:
+          - switch.turn_on:  relay1
+          - switch.turn_off: relay2
+          - switch.turn_off: relay3
+          - switch.turn_on:  relay4
+# All Off
+      - above: 0.98
+        then:
+          - switch.turn_off: relay1
+          - switch.turn_off: relay2
+          - switch.turn_off: relay3
+          - switch.turn_off: relay4
+# Flash Light - Yet to do
+      - below: 0
+        then:
+          - switch.turn_off: relay1
+          - switch.turn_off: relay2
+          - switch.turn_off: relay3
+          - switch.turn_off: relay4
+          
+# Four relay outputs, exposed as switches in Home Assistant
+switch:
+  - platform: gpio
+    pin: GPIO16
+    name: Light
+    id: relay1
+  - platform: gpio
+    pin: GPIO14
+    name: Fan Slow
+    id: relay2
+    interlock: &interlock_group [relay2, relay3,relay4]
+  - platform: gpio
+    pin: GPIO12
+    name: Fan Mid
+    id: relay3
+    interlock: *interlock_group
+  - platform: gpio
+    pin: GPIO13
+    name: Fan High
+    id: relay4
+    interlock: *interlock_group
+
