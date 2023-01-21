@@ -9,14 +9,14 @@ logger:
 
 # Enable Home Assistant API
 api:
-  password: "1q2w3e4r5t6y7u8i9o0p"
+  password: "password"
 
 ota:
-  password: "1q2w3e4r5t6y7u8i9o0p"
+  password: "password"
 
 wifi:
-  ssid: "AP02"
-  password: "1q2w3e4r5t6y7u8i9o0p"
+  ssid: "SSID"
+  password: "password"
 
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
@@ -32,18 +32,14 @@ status_led:
     inverted: True
 
 # i2c Bus Pins
-i2c:
-  sda: 2
-  scl: 4
-  scan: true
-  id: bus_a
+#i2c:
+#  sda: 2
+#  scl: 4
+#  scan: true
+#  id: bus_a
 
-# Light Sensor
 sensor:
-  - platform: bh1750
-    name: "Illuminance"
-    address: 0x23
-    update_interval: 10s
+# Input Switch 
   - platform: adc
     pin: A0
     name: "Switch Control"
@@ -66,7 +62,7 @@ sensor:
           - switch.turn_off: relay3
           - switch.turn_off: relay4
 # Fan Slow + light - 0.75586v
-      - above: 0.7
+      - above: 0.75
         below: 0.8
         then:
           - switch.turn_on:  relay1
@@ -74,8 +70,8 @@ sensor:
           - switch.turn_off: relay3
           - switch.turn_off: relay4
 # Fan Mid - 0.66v
-      - above: 0.65555
-        below: 0.7
+      - above: 0.63555
+        below: 0.75
         then:
           - switch.turn_off: relay1
           - switch.turn_off: relay2
@@ -83,7 +79,7 @@ sensor:
           - switch.turn_off: relay4
 # Fan Mid + Light 0.65v
       - above: 0.55
-        below: 0.65555
+        below: 0.63555
         then:
           - switch.turn_on:  relay1
           - switch.turn_off: relay2
@@ -121,6 +117,7 @@ sensor:
           - switch.turn_off: relay4
           
 # Four relay outputs, exposed as switches in Home Assistant
+# Interlock so that only one fan speed available at a time 
 switch:
   - platform: gpio
     pin: GPIO16
@@ -141,4 +138,3 @@ switch:
     name: Fan High
     id: relay4
     interlock: *interlock_group
-
